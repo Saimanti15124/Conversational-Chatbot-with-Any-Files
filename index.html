@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            margin-bottom: 10px;
+        }
+        #response {
+            background-color: #f9f9f9;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Document Chatbot</h1>
+    <form id="uploadForm">
+        <input type="file" name="file" id="file" accept=".pdf,.docx,.xlsx,.csv" required>
+        <button type="submit">Upload Document</button>
+    </form>
+    <br>
+    <form id="queryForm">
+        <label for="llm">Choose LLM:</label>
+        <select name="llm" id="llm">
+            {% for llm in llm_options %}
+                <option value="{{ llm }}">{{ llm }}</option>
+            {% endfor %}
+        </select>
+        <br><br>
+        <textarea name="query" id="query" placeholder="Enter your query" required></textarea>
+        <br><br>
+        <button type="submit">Submit Query</button>
+    </form>
+    <h2>Response:</h2>
+    <div id="response"></div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData();
+            formData.append('file', document.getElementById('file').files[0]);
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    alert(result.message);
+                } else {
+                    alert(`Error: ${result.error}`);
+                }
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        });
+
+        document.getElementById('queryForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const query = document.getElementById('query').value;
+            const llm = document.getElementById('llm').value;
+
+            try {
+                const response = await fetch('/query', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query, llm })
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    document.getElementById('response').innerText = result.response;
+                } else {
+                    document.getElementById('response').innerText = `Error: ${result.error}`;
+                }
+            } catch (error) {
+                document.getElementById('response').innerText = `Error: ${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html>
